@@ -1,0 +1,234 @@
+<html>
+<head>
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body onload="makeplotInit();">
+
+  <div class="container mt-3">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row mt-4">
+          <p style="font-style: italic; font-weight: bold;">Personnalisez la visualisation en tapant le nom d'un pays !</p>
+        </div>
+        <!-- Search box -->
+          <div class="autocomplete mt-4">
+            <form autocomplete="off" class="row">
+              <div class="col-md-4">
+                <input class="form-control" id="myInput" type="text" name="country" placeholder="Country">
+              </div>
+              <div class="col-md-1">
+                <button type="button" class="btn btn-dark" onclick="getInputAndPlot();">Search</button>
+              </div>
+            </form>
+          </div>
+      </div>
+      <div class="col">
+        <div id="deathRates"><!-- Plotly chart will be drawn inside this DIV --></div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+  function autocomplete(inp, arr) {
+    /*the autocomplete function takes two arguments,
+    the text field element and an array of possible autocompleted values:*/
+    var currentFocus;
+    /*execute a function when someone writes in the text field:*/
+    inp.addEventListener("input", function(e) {
+        var a, b, i, val = this.value;
+        /*close any already open lists of autocompleted values*/
+        closeAllLists();
+        if (!val) { return false;}
+        currentFocus = -1;
+        /*create a DIV element that will contain the items (values):*/
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autocomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+        /*append the DIV element as a child of the autocomplete container:*/
+        this.parentNode.appendChild(a);
+        /*for each item in the array...*/
+        for (i = 0; i < arr.length; i++) {
+          /*check if the item starts with the same letters as the text field value:*/
+          if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+            /*create a DIV element for each matching element:*/
+            b = document.createElement("DIV");
+            /*make the matching letters bold:*/
+            b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+            b.innerHTML += arr[i].substr(val.length);
+            /*insert a input field that will hold the current array item's value:*/
+            b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+            /*execute a function when someone clicks on the item value (DIV element):*/
+            b.addEventListener("click", function(e) {
+                /*insert the value for the autocomplete text field:*/
+                inp.value = this.getElementsByTagName("input")[0].value;
+                /*close the list of autocompleted values,
+                (or any other open lists of autocompleted values:*/
+                closeAllLists();
+            });
+            a.appendChild(b);
+          }
+        }
+    });
+    /*execute a function presses a key on the keyboard:*/
+    inp.addEventListener("keydown", function(e) {
+        var x = document.getElementById(this.id + "autocomplete-list");
+        if (x) x = x.getElementsByTagName("div");
+        if (e.keyCode == 40) {
+          /*If the arrow DOWN key is pressed,
+          increase the currentFocus variable:*/
+          currentFocus++;
+          /*and and make the current item more visible:*/
+          addActive(x);
+        } else if (e.keyCode == 38) { //up
+          /*If the arrow UP key is pressed,
+          decrease the currentFocus variable:*/
+          currentFocus--;
+          /*and and make the current item more visible:*/
+          addActive(x);
+        } else if (e.keyCode == 13) {
+          /*If the ENTER key is pressed, prevent the form from being submitted,*/
+          e.preventDefault();
+          if (currentFocus > -1) {
+            /*and simulate a click on the "active" item:*/
+            if (x) x[currentFocus].click();
+          }
+        }
+    });
+    function addActive(x) {
+      /*a function to classify an item as "active":*/
+      if (!x) return false;
+      /*start by removing the "active" class on all items:*/
+      removeActive(x);
+      if (currentFocus >= x.length) currentFocus = 0;
+      if (currentFocus < 0) currentFocus = (x.length - 1);
+      /*add class "autocomplete-active":*/
+      x[currentFocus].classList.add("autocomplete-active");
+    }
+    function removeActive(x) {
+      /*a function to remove the "active" class from all autocomplete items:*/
+      for (var i = 0; i < x.length; i++) {
+        x[i].classList.remove("autocomplete-active");
+      }
+    }
+    function closeAllLists(elmnt) {
+      /*close all autocomplete lists in the document,
+      except the one passed as an argument:*/
+      var x = document.getElementsByClassName("autocomplete-items");
+      for (var i = 0; i < x.length; i++) {
+        if (elmnt != x[i] && elmnt != inp) {
+          x[i].parentNode.removeChild(x[i]);
+        }
+      }
+    }
+    /*execute a function when someone clicks in the document:*/
+    document.addEventListener("click", function (e) {
+        closeAllLists(e.target);
+    });
+  }
+  
+  /*An array containing all the country names in the world:*/
+  //var countries = ["Afghanistan","Albania","Algeria","Andorra","Angola","Anguilla","Antigua & Barbuda","Argentina","Armenia","Aruba","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bermuda","Bhutan","Bolivia","Bosnia & Herzegovina","Botswana","Brazil","British Virgin Islands","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Cayman Islands","Central Arfrican Republic","Chad","Chile","China","Colombia","Congo","Cook Islands","Costa Rica","Cote D Ivoire","Croatia","Cuba","Curacao","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Ethiopia","Falkland Islands","Faroe Islands","Fiji","Finland","France","French Polynesia","French West Indies","Gabon","Gambia","Georgia","Germany","Ghana","Gibraltar","Greece","Greenland","Grenada","Guam","Guatemala","Guernsey","Guinea","Guinea Bissau","Guyana","Haiti","Honduras","Hong Kong","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Isle of Man","Israel","Italy","Jamaica","Japan","Jersey","Jordan","Kazakhstan","Kenya","Kiribati","Kosovo","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Macau","Macedonia","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Montserrat","Morocco","Mozambique","Myanmar","Namibia","Nauro","Nepal","Netherlands","Netherlands Antilles","New Caledonia","New Zealand","Nicaragua","Niger","Nigeria","North Korea","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Puerto Rico","Qatar","Reunion","Romania","Russia","Rwanda","Saint Pierre & Miquelon","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","St Kitts & Nevis","St Lucia","St Vincent","Sudan","Suriname","Swaziland","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor L'Este","Togo","Tonga","Trinidad & Tobago","Tunisia","Turkey","Turkmenistan","Turks & Caicos","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States of America","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Virgin Islands (US)","Yemen","Zambia","Zimbabwe"];
+  var countries = ['Afghanistan'];
+  Plotly.d3.csv("https://raw.githubusercontent.com/elkassimyhajar/Open-Data-Chalenge/main/Datasets/countries.csv", function(data){ 
+    //console.log(data[0].Afghanistan); 
+    for(var i=0; i < data.length; i++){
+       countries.push(data[i].Afghanistan);
+     }
+     console.log(countries);
+  });
+
+  /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+  autocomplete(document.getElementById("myInput"), countries);
+  </script>
+
+
+  <script>
+//https://raw.githubusercontent.com/elkassimyhajar/Open-Data-Chalenge/main/Datasets/output_deaths.csv
+
+
+    var country;
+    function makeplotInit(){
+      country = 'Afghanistan';
+      makeplot(country);
+    }
+    function getInputAndPlot(){
+      country = document.querySelector('input').value;
+      console.log(country);
+      //Plotly.deleteTraces('deathRates', 0);
+      makeplot(country);
+    }
+    function makeplot(countryName) {
+      //get input value
+      Plotly.d3.csv("https://raw.githubusercontent.com/elkassimyhajar/Open-Data-Chalenge/main/Datasets/output_deaths.csv", function(data){ 
+        data = data.filter(function(row){
+          return row['Entity'].toUpperCase() === countryName.toUpperCase();
+        });
+        processData(data, countryName) } );
+    };
+    
+    function processData(allRows, countryName) {
+    
+      console.log(allRows);
+      var x1 = [], y1 = [], n1, f1, standard_deviation = [];
+      var x2 = [], y2 = [], n2, f2;
+      var x3 = [], y3 = [], n3, f3;
+      var x4 = [], y4 = [], n4, f4;
+      var x5 = [], y5 = [], n5, f5;
+
+      for (var i=0; i<allRows.length; i++) {
+        row = allRows[i];
+        x1.push( row['Year'] );
+        y1.push( row['Deaths - Age: under 5 years'] );
+        n1= 'Under 5 years';
+        f1 = 'rgb(250, 200, 152)';
+
+        x2.push( row['Year'] );
+        y2.push( row['Deaths - Age: 5-14 years'] );
+        n2 = '5-14 years';
+        f2 = 'rgb(111, 143, 175)';
+
+        x3.push( row['Year'] );
+        y3.push( row['Deaths - Age: 15-49 years'] );
+        n3 = '15-49 years';
+        f3 = 'rgb(135, 206, 235)';
+
+        x4.push( row['Year'] );
+        y4.push( row['Deaths - Age: 50-69 years'] );
+        n4 = '50-69 years';
+        f4 = 'rgb(204, 85, 0)';
+
+        x5.push( row['Year'] );
+        y5.push( row['Deaths - Age: 70+ years'] );
+        n5 = '70+ years';
+        f5 = 'rgb(8, 24, 168)';
+      }
+      //console.log( 'X',x, 'Y',y, 'SD',standard_deviation );
+  
+
+      //var traces = [{x:x1, y:y1, name: n1, fill: 'tonexty', fillcolor: f1, line: {color: f1}}, 
+      //              {x:x2, y:y2, name: n2, fill: 'tonexty', fillcolor: f2, line: {color: f2}},
+      //              {x:x3, y:y3, name: n3, fill: 'tonexty', fillcolor: f3, line: {color: f3}},
+      //              {x:x4, y:y4, name: n4, fill: 'tonexty', fillcolor: f4, line: {color: f4}},
+      //              {x:x5, y:y5, name: n5, fill: 'tonexty', fillcolor: f5, line: {color: f5}}];
+
+      var traces = [{x:x1, y:y1, name: n1, line: {color: f1}}, 
+                    {x:x2, y:y2, name: n2, line: {color: f2}},
+                    {x:x3, y:y3, name: n3, line: {color: f3}},
+                    {x:x4, y:y4, name: n4, line: {color: f4}},
+                    {x:x5, y:y5, name: n5, line: {color: f5}}];
+      Plotly.newPlot('deathRates', traces,
+                    {title: 'Number of deaths by age slot in ' + countryName});
+    }
+
+    
+  </script>
+<!-- Bootstrap -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
